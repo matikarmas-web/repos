@@ -154,9 +154,48 @@ def _rule_key_matches(rule_value, actual):
 def matching_rules(rules, line, code):
     matched = []
     for rule in rules:
-        if _rule_key_matches(rule.get('line'), line) and _rule_key_matches(rule.get('code'), code):
+        if _rule_key_matches(row_get(rule, 'line'), line) and _rule_key_matches(row_get(rule, 'code'), code):
             matched.append(rule)
     return matched
+
+
+def rules_from_dataset(ds):
+    """Convert an Ignition Named Query PyDataSet into a list of rule dicts."""
+    out = []
+    if ds is None:
+        return out
+    for r in ds:
+        out.append({
+            'line': r['line'],
+            'code': r['code'],
+            'condition': r['condition'],
+        })
+    return out
+
+
+def condition_matches(row, line, rules, context, on_error=None):
+    """True only when a matching line+code rule exists and its expression is true.
+
+    No matching rule => False. Use this for extra fault lines in the click script
+    (unlike row_applies, which includes rows that have no rule).
+    """
+    code = row_get(row, 'code')
+    found = matching_rules(rules, line, code)
+    if not found:
+        return False
+    for rule in found:
+        expr = row_get(rule, 'condition')
+        if evaluate_condition_safe(expr, context, on_error=on_error):
+            return True
+    return False
+
+
+def extra_fault_text(row, line, rules, code_text, translate, ui=None, extra=None, on_error=None):
+    """Fault suffix for one instance row, or '' if no extra rule fired."""
+    ctx = build_context(row, line, code_text, ui=ui, extra=extra)
+    if not condition_matches(row, line, rules, ctx, on_error=on_error):
+        return ''
+    return format_fault_line(row, translate)
 
 
 def row_applies(row, line, rules, context, on_error=None):
@@ -170,7 +209,7 @@ def row_applies(row, line, rules, context, on_error=None):
     if not found:
         return True
     for rule in found:
-        expr = rule.get('condition')
+        expr = row_get(rule, 'condition')
         if evaluate_condition_safe(expr, context, on_error=on_error):
             return True
     return False

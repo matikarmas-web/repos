@@ -28,11 +28,11 @@ Jythonis kasuta `!=`, mitte `<>`. Sõned pane jutumärkidesse: `'na'`, mitte `na
 
 1. Loo tabel (`sql/fault_conditions.sql`) ja Named Query `fault_conditions_for_line`.
 2. Kopeeri `fault_eval.py` Project Library moodulisse (nt `fault_eval`).
-3. Asenda vana `if line=='PROM1004':` puu näitega `ignition/perspective_example.py`.
+3. Asenda vana `if line=='PROM1004':` puu näitega `ignition/perspective_example.py` (`extra_fault_text`).
 
 Uue liini või operatsiooni lisamiseks: INSERT tabelisse. Koodi muutma ei pea.
 
-Kui selle `line`+`code` kohta **pole ühtegi reeglit**, rida **lisatakse** (vaikimisi nagu varem). Reeglid on erandid. Mitu reeglit samale `line`+`code` paarile on **VÕI** (piisab ühest tõesest, nagu kaks eraldi `if`-i).
+Click-skriptis on `extra_fault_text` **lisafault**: kui selle `line`+`code` kohta **pole reeglit**, ei lisata midagi. Mitu reeglit samale paarile on **VÕI** (piisab ühest tõesest, nagu kaks eraldi `if`-i). `must` / `mode` / `notSelected` / `not ok` loogika jääb skripti.
 
 Kui tahad, et tabel ise oleks tõde (iga rida kannab oma `condition` veergu), anna `collect_faults(..., rules=[])` — siis loetakse tingimus andmerealt.
 
