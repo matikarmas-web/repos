@@ -258,13 +258,63 @@ if ($rowsResult) {
             button {
                 font-size: 34px;
             }
-            .inventory-table {
-                font-size: 13px;
-            }
             .viga-checkbox {
-                width: 20px;
-                height: 20px;
+                width: 22px;
+                height: 22px;
             }
+        }
+        /* Zebra TC58 portree on umbes 360–430 CSS-pikslit lai.
+           Viis veergu ei mahu loetava suurusega, seega konteiner läheb teisele reale. */
+        @media (max-width: 620px) {
+            .table-wrap {
+                container-type: inline-size;
+                overflow-x: hidden;
+            }
+            .inventory-table {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                font-size: 15px;
+            }
+            @supports (width: 1cqi) {
+                .inventory-table {
+                    font-size: min(18px, calc((100cqi - 14px) / 23));
+                }
+            }
+            .inventory-table thead,
+            .inventory-table tbody {
+                display: block;
+                width: 100%;
+            }
+            .inventory-table tr {
+                display: grid;
+                grid-template-columns: minmax(0, 11ch) minmax(0, 9ch) minmax(0, 10ch) minmax(0, 7.4ch);
+                grid-template-areas:
+                    "kood asukoht kogus chk"
+                    "konteiner konteiner konteiner konteiner";
+                column-gap: 3px;
+                row-gap: 1px;
+                align-items: center;
+                justify-content: start;
+                border-bottom: 1px solid var(--border);
+                padding: 3px 0 4px;
+            }
+            .inventory-table th,
+            .inventory-table td {
+                min-width: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            .inventory-table th:nth-child(1),
+            .inventory-table td:nth-child(1) { grid-area: kood; }
+            .inventory-table th:nth-child(2),
+            .inventory-table td:nth-child(2) { grid-area: asukoht; }
+            .inventory-table th:nth-child(3),
+            .inventory-table td:nth-child(3) { grid-area: konteiner; }
+            .inventory-table th:nth-child(4),
+            .inventory-table td:nth-child(4) { grid-area: kogus; }
+            .inventory-table th:nth-child(5),
+            .inventory-table td:nth-child(5) { grid-area: chk; }
         }
         /* Kinnituse aken: checkboxi muudatus */
         .viga-confirm-backdrop {
@@ -479,6 +529,54 @@ if ($rowsResult) {
             openConfirmModal();
         });
     });
+})();
+
+(function () {
+    var wrap = document.querySelector('.table-wrap');
+    var table = document.querySelector('.inventory-table');
+    if (!wrap || !table || !window.matchMedia) {
+        return;
+    }
+    var narrow = window.matchMedia('(max-width: 620px)');
+    var probe = document.createElement('span');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.textContent = '0000000000000000000000000000000000000';
+    probe.style.cssText = 'position:absolute;left:-9999px;top:0;white-space:nowrap;font-family:"Courier New",Courier,monospace;';
+    document.body.appendChild(probe);
+
+    function fitTable() {
+        if (!narrow.matches) {
+            table.style.fontSize = '';
+            return;
+        }
+        var available = wrap.clientWidth - 12;
+        probe.style.fontSize = '16px';
+        var widthAt16 = probe.getBoundingClientRect().width;
+        var size = 16;
+        if (widthAt16 > 0 && available > 0) {
+            size = 16 * (available / widthAt16);
+        }
+        if (size > 18) {
+            size = 18;
+        }
+        if (size < 12) {
+            size = 12;
+        }
+        table.style.fontSize = size.toFixed(2) + 'px';
+        var guard = 0;
+        while (guard < 14 && table.scrollWidth > wrap.clientWidth + 1) {
+            size -= 0.35;
+            table.style.fontSize = size.toFixed(2) + 'px';
+            guard += 1;
+        }
+    }
+
+    window.addEventListener('resize', fitTable);
+    window.addEventListener('orientationchange', fitTable);
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fitTable);
+    }
+    fitTable();
 })();
 </script>
 </body>
